@@ -59,7 +59,7 @@ joblib.dump(model, "telco_churn_model.pkl")
 # Streamlit Dashboard
 st.title("Telco Customer Churn Prediction Dashboard")
 
-# Input Fields
+# User Inputs
 tenure = st.number_input("Tenure (Months)", min_value=0, max_value=72, value=12)
 monthly_charges = st.number_input("Monthly Charges ($)", min_value=0.0, max_value=150.0, value=50.0)
 total_charges = st.number_input("Total Charges ($)", min_value=0.0, value=600.0)
@@ -73,6 +73,14 @@ input_data = pd.DataFrame([[tenure, monthly_charges, total_charges, contract, in
 
 # Load Model
 model = joblib.load("telco_churn_model.pkl")
+
+# Ensure input columns match training data
+missing_cols = set(X_train.columns) - set(input_data.columns)
+for col in missing_cols:
+    input_data[col] = 0  # Fill missing columns with default values
+
+# Reorder columns to match training data
+input_data = input_data[X_train.columns]
 
 # Predict
 if st.button("Predict Churn"):
