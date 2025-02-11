@@ -87,52 +87,50 @@ streaming_movies = st.selectbox("Streaming Movies", ["No", "Yes"])
 partner = st.selectbox("Partner", ["Yes", "No"])
 dependents = st.selectbox("Dependents", ["Yes", "No"])
 
-# Create input dataframe
-input_data = pd.DataFrame([[tenure, monthly_charges, total_charges, contract, internet_service, paperless_billing, 
-                            payment_method, phone_service, multiple_lines, online_security, online_backup, 
-                            device_protection, tech_support, streaming_tv, streaming_movies, partner, dependents]],
-                          columns=X_train.columns)
+# Debugging: Print expected vs provided input values
+st.write("🔹 Debug: Number of Columns Expected by Model")
+st.write(len(X_train.columns), X_train.columns.tolist())
 
-# Debugging: Print column names in input_data
-st.write("🔹 Debug: Columns in input_data before transformation")
-st.write(input_data.columns.tolist())
+input_values = [tenure, monthly_charges, total_charges, contract, internet_service, paperless_billing,
+                payment_method, phone_service, multiple_lines, online_security, online_backup,
+                device_protection, tech_support, streaming_tv, streaming_movies, partner, dependents]
 
-# Convert categorical features to string type only if they exist
-for col in categorical_features:
-    if col in input_data.columns:
-        input_data[col] = input_data[col].astype(str)
-    else:
-        st.write(f"⚠️ Warning: Column '{col}' not found in input_data. It will be added with a default value.")
-        input_data[col] = "Unknown"
+st.write("🔹 Debug: Number of Values Provided for Input Data")
+st.write(len(input_values), input_values)
 
-# Convert numerical features to float and handle missing values
-for col in numerical_features:
-    input_data[col] = pd.to_numeric(input_data[col], errors='coerce').fillna(0)
+# Ensure the input length matches expected columns
+if len(input_values) != len(X_train.columns):
+    st.write("❌ Error: Mismatch between input values and expected columns!")
+else:
+    input_data = pd.DataFrame([input_values], columns=X_train.columns)
 
-# Ensure all required columns exist in input data
-missing_cols = set(X_train.columns) - set(input_data.columns)
-if missing_cols:
-    st.write("⚠️ Missing Columns in input_data:", missing_cols)
-    for col in missing_cols:
-        input_data[col] = 0
+    # Convert categorical features to string type
+    for col in categorical_features:
+        if col in input_data.columns:
+            input_data[col] = input_data[col].astype(str)
+        else:
+            st.write(f"⚠️ Warning: Column '{col}' not found in input_data. Adding with default value.")
+            input_data[col] = "Unknown"
 
-# Reorder columns to match training data
-input_data = input_data[X_train.columns]
+    # Convert numerical features to float and handle missing values
+    for col in numerical_features:
+        input_data[col] = pd.to_numeric(input_data[col], errors='coerce').fillna(0)
 
-# Debugging: Display final input data before prediction
-st.write("🔹 Debug: Final Processed Input Data for Model")
-st.write(input_data)
+    # Reorder columns to match training data
+    input_data = input_data[X_train.columns]
 
-# Predict
-if st.button("Predict Churn"):
-    st.write("🔹 Button Clicked! Running Prediction...")
-    try:
-        prediction = model.predict(input_data)
-        probability = model.predict_proba(input_data)[:, 1][0]
-        st.write("✅ Prediction Successful!")
-        
-        # Display results
-        st.write("Churn Prediction:", "Yes" if prediction[0] == 1 else "No")
-        st.write("Churn Probability:", round(probability * 100, 2), "%")
-    except Exception as e:
-        st.write("❌ Error During Prediction:", str(e))
+    # Debugging: Display final input data before prediction
+    st.write("🔹 Debug: Final Processed Input Data for Model")
+    st.write(input_data)
+
+    # Predict
+    if st.button("Predict Churn"):
+        st.write("🔹 Button Clicked! Running Prediction...")
+        try:
+            prediction = model.predict(input_data)
+            probability = model.predict_proba(input_data)[:, 1][0]
+            st.write("✅ Prediction Successful!")
+            st.write("Churn Prediction:", "Yes" if prediction[0] == 1 else "No")
+            st.write("Churn Probability:", round(probability * 100, 2), "%")
+        except Exception as e:
+            st.write("❌ Error During Prediction:", str(e))
