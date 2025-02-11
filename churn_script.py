@@ -16,8 +16,13 @@ df = pd.read_csv("Telco-Customer-Churn.csv")
 df = df.drop(columns=['customerID'])
 
 # Convert 'TotalCharges' to numeric, handling errors
-df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
-df.fillna({'TotalCharges': df['TotalCharges'].median()}, inplace=True)
+df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce').fillna(0)
+
+# Replace "No internet service" and "No phone service" with "No"
+cols_to_clean = ["OnlineSecurity", "OnlineBackup", "DeviceProtection", 
+                 "TechSupport", "StreamingTV", "StreamingMovies", "MultipleLines"]
+for col in cols_to_clean:
+    df[col] = df[col].replace({"No internet service": "No", "No phone service": "No"})
 
 # Encode target variable
 df['Churn'] = df['Churn'].map({'Yes': 1, 'No': 0})
@@ -33,7 +38,7 @@ numerical_features = X.select_dtypes(exclude=['object']).columns
 # Preprocessing pipeline
 preprocessor = ColumnTransformer([
     ('num', StandardScaler(), numerical_features),
-    ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)  # Fix for unseen categories
+    ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
 ])
 
 # Train-Test Split
@@ -47,12 +52,6 @@ model = Pipeline([
 
 model.fit(X_train, y_train)
 
-# Model Evaluation
-y_pred = model.predict(X_test)
-print("Accuracy:", accuracy_score(y_test, y_pred))
-print("Classification Report:\n", classification_report(y_test, y_pred))
-print("AUC-ROC Score:", roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]))
-
 # Save Model
 joblib.dump(model, "telco_churn_model.pkl")
 
@@ -60,66 +59,53 @@ joblib.dump(model, "telco_churn_model.pkl")
 st.title("Telco Customer Churn Prediction Dashboard")
 
 # User Inputs
+gender = st.selectbox("Gender", ["Male", "Female"])
+senior_citizen = st.selectbox("Senior Citizen", [0, 1])  # 0 = No, 1 = Yes
+partner = st.selectbox("Partner", ["Yes", "No"])
+dependents = st.selectbox("Dependents", ["Yes", "No"])
 tenure = st.number_input("Tenure (Months)", min_value=0, max_value=72, value=12)
+phone_service = st.selectbox("Phone Service", ["Yes", "No"])
+multiple_lines = st.selectbox("Multiple Lines", ["No", "Yes"])
+internet_service = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
+online_security = st.selectbox("Online Security", ["No", "Yes"])
+online_backup = st.selectbox("Online Backup", ["No", "Yes"])
+device_protection = st.selectbox("Device Protection", ["No", "Yes"])
+tech_support = st.selectbox("Tech Support", ["No", "Yes"])
+streaming_tv = st.selectbox("Streaming TV", ["No", "Yes"])
+streaming_movies = st.selectbox("Streaming Movies", ["No", "Yes"])
+contract = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
+paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
+payment_method = st.selectbox("Payment Method", ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
 monthly_charges = st.number_input("Monthly Charges ($)", min_value=0.0, max_value=150.0, value=50.0)
 total_charges = st.number_input("Total Charges ($)", min_value=0.0, value=600.0)
-contract = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
-internet_service = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
-paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
 
 # Create input dataframe
-input_data = pd.DataFrame([[tenure, monthly_charges, total_charges, contract, internet_service, paperless_billing]],
-                          columns=['tenure', 'MonthlyCharges', 'TotalCharges', 'Contract', 'InternetService', 'PaperlessBilling'])
+input_values = [
+    gender, senior_citizen, partner, dependents, tenure, phone_service, multiple_lines,
+    internet_service, online_security, online_backup, device_protection, tech_support,
+    streaming_tv, streaming_movies, contract, paperless_billing, payment_method,
+    monthly_charges, total_charges
+]
+
+input_data = pd.DataFrame([input_values], columns=X_train.columns)
 
 # Convert categorical features to string type
-for col in ['Contract', 'InternetService', 'PaperlessBilling']:
+for col in categorical_features:
     input_data[col] = input_data[col].astype(str)
 
-# Convert numerical features to float
-for col in ['tenure', 'MonthlyCharges', 'TotalCharges']:
-    input_data[col] = pd.to_numeric(input_data[col], errors='coerce')
-
-# Check for missing values
-st.write("🔹 Checking Input Data Before Prediction")
-st.write(input_data.isnull().sum())
-input_data.fillna(0, inplace=True)  # Fill missing values with 0
-
-# Load Model
-model = joblib.load("telco_churn_model.pkl")
-
-# Ensure input columns match training data
-st.write("🔹 Expected Columns by Model:")
-st.write(X_train.columns.tolist())
-st.write("🔹 Actual Input Columns:")
-st.write(input_data.columns.tolist())
-
-missing_cols = set(X_train.columns) - set(input_data.columns)
-for col in missing_cols:
-    input_data[col] = 0  # Fill missing columns
+# Convert numerical features to float and handle missing values
+for col in numerical_features:
+    input_data[col] = pd.to_numeric(input_data[col], errors='coerce').fillna(0)
 
 # Reorder columns to match training data
 input_data = input_data[X_train.columns]
 
 # Predict
 if st.button("Predict Churn"):
-    st.write("🔹 Button Clicked! Running Prediction...")
     try:
-        # Convert numerical features to float again to prevent errors
-        for col in ['tenure', 'MonthlyCharges', 'TotalCharges']:
-            input_data[col] = pd.to_numeric(input_data[col], errors='coerce')
-        input_data.fillna(0, inplace=True)  # Ensure no NaN values
-        
-        # Debugging: Show input data before prediction
-        st.write("🔹 Input Data Before Prediction:")
-        st.write(input_data)
-
-        # Run prediction
         prediction = model.predict(input_data)
         probability = model.predict_proba(input_data)[:, 1][0]
-
-        st.write("✅ Prediction Successful!")
         st.write("Churn Prediction:", "Yes" if prediction[0] == 1 else "No")
         st.write("Churn Probability:", round(probability * 100, 2), "%")
-
     except Exception as e:
         st.write("❌ Error During Prediction:", str(e))
