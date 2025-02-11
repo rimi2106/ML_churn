@@ -80,7 +80,7 @@ for col in ['tenure', 'MonthlyCharges', 'TotalCharges']:
     input_data[col] = pd.to_numeric(input_data[col], errors='coerce')
 
 # Check for missing values
-st.write("Checking for missing values before prediction:")
+st.write("🔹 Checking Input Data Before Prediction")
 st.write(input_data.isnull().sum())
 input_data.fillna(method='ffill', inplace=True)
 
@@ -88,22 +88,28 @@ input_data.fillna(method='ffill', inplace=True)
 model = joblib.load("telco_churn_model.pkl")
 
 # Ensure input columns match training data
+st.write("🔹 Expected Columns by Model:")
+st.write(X_train.columns.tolist())
+st.write("🔹 Actual Input Columns:")
+st.write(input_data.columns.tolist())
+
 missing_cols = set(X_train.columns) - set(input_data.columns)
 for col in missing_cols:
-    input_data[col] = 0  # Fill missing columns with default values
+    input_data[col] = 0  # Fill missing columns
 
 # Reorder columns to match training data
 input_data = input_data[X_train.columns]
 
-# Debugging categorical values
-st.write("Unique Categories in Training Data:")
-st.write(preprocessor.named_transformers_['cat'].categories_)
-st.write("User Input Values:")
-st.write(input_data[['Contract', 'InternetService', 'PaperlessBilling']])
-
 # Predict
 if st.button("Predict Churn"):
-    prediction = model.predict(input_data)
-    probability = model.predict_proba(input_data)[:, 1][0]
-    st.write("Churn Prediction:", "Yes" if prediction[0] == 1 else "No")
-    st.write("Churn Probability:", round(probability * 100, 2), "%")
+    st.write("🔹 Button Clicked! Running Prediction...")
+    try:
+        prediction = model.predict(input_data)
+        probability = model.predict_proba(input_data)[:, 1][0]
+        st.write("✅ Prediction Successful!")
+        
+        # Display results
+        st.write("Churn Prediction:", "Yes" if prediction[0] == 1 else "No")
+        st.write("Churn Probability:", round(probability * 100, 2), "%")
+    except Exception as e:
+        st.write("❌ Error During Prediction:", str(e))
