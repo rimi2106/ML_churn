@@ -69,31 +69,36 @@ st.write("🔹 Debug: Expected Categorical Features")
 st.write(categorical_features.tolist())
 
 # User Inputs
+gender = st.selectbox("Gender", ["Male", "Female"])
+senior_citizen = st.selectbox("Senior Citizen", [0, 1])  # 0 = No, 1 = Yes
+partner = st.selectbox("Partner", ["Yes", "No"])
+dependents = st.selectbox("Dependents", ["Yes", "No"])
 tenure = st.number_input("Tenure (Months)", min_value=0, max_value=72, value=12)
-monthly_charges = st.number_input("Monthly Charges ($)", min_value=0.0, max_value=150.0, value=50.0)
-total_charges = st.number_input("Total Charges ($)", min_value=0.0, value=600.0)
-contract = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
-internet_service = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
-paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
-payment_method = st.selectbox("Payment Method", ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
 phone_service = st.selectbox("Phone Service", ["Yes", "No"])
 multiple_lines = st.selectbox("Multiple Lines", ["No", "Yes"])
+internet_service = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
 online_security = st.selectbox("Online Security", ["No", "Yes"])
 online_backup = st.selectbox("Online Backup", ["No", "Yes"])
 device_protection = st.selectbox("Device Protection", ["No", "Yes"])
 tech_support = st.selectbox("Tech Support", ["No", "Yes"])
 streaming_tv = st.selectbox("Streaming TV", ["No", "Yes"])
 streaming_movies = st.selectbox("Streaming Movies", ["No", "Yes"])
-partner = st.selectbox("Partner", ["Yes", "No"])
-dependents = st.selectbox("Dependents", ["Yes", "No"])
+contract = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
+paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
+payment_method = st.selectbox("Payment Method", ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
+monthly_charges = st.number_input("Monthly Charges ($)", min_value=0.0, max_value=150.0, value=50.0)
+total_charges = st.number_input("Total Charges ($)", min_value=0.0, value=600.0)
 
 # Debugging: Print expected vs provided input values
 st.write("🔹 Debug: Number of Columns Expected by Model")
 st.write(len(X_train.columns), X_train.columns.tolist())
 
-input_values = [tenure, monthly_charges, total_charges, contract, internet_service, paperless_billing,
-                payment_method, phone_service, multiple_lines, online_security, online_backup,
-                device_protection, tech_support, streaming_tv, streaming_movies, partner, dependents]
+input_values = [
+    gender, senior_citizen, partner, dependents, tenure, phone_service, multiple_lines,
+    internet_service, online_security, online_backup, device_protection, tech_support,
+    streaming_tv, streaming_movies, contract, paperless_billing, payment_method,
+    monthly_charges, total_charges
+]
 
 st.write("🔹 Debug: Number of Values Provided for Input Data")
 st.write(len(input_values), input_values)
