@@ -71,6 +71,14 @@ paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
 input_data = pd.DataFrame([[tenure, monthly_charges, total_charges, contract, internet_service, paperless_billing]],
                           columns=['tenure', 'MonthlyCharges', 'TotalCharges', 'Contract', 'InternetService', 'PaperlessBilling'])
 
+# Convert categorical features to string type
+input_data['Contract'] = input_data['Contract'].astype(str)
+input_data['InternetService'] = input_data['InternetService'].astype(str)
+input_data['PaperlessBilling'] = input_data['PaperlessBilling'].astype(str)
+
+# Convert numerical features to float
+input_data[['tenure', 'MonthlyCharges', 'TotalCharges']] = input_data[['tenure', 'MonthlyCharges', 'TotalCharges']].astype(float)
+
 # Load Model
 model = joblib.load("telco_churn_model.pkl")
 
@@ -81,6 +89,14 @@ for col in missing_cols:
 
 # Reorder columns to match training data
 input_data = input_data[X_train.columns]
+
+# Debugging missing categories
+st.write("Training categories:", preprocessor.named_transformers_['cat'].categories_)
+st.write("User input:", input_data[['Contract', 'InternetService', 'PaperlessBilling']].values)
+
+# Check for NaN values
+st.write("Missing values in input:", input_data.isnull().sum())
+input_data.fillna(method='ffill', inplace=True)
 
 # Predict
 if st.button("Predict Churn"):
