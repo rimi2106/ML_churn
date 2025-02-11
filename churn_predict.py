@@ -82,7 +82,7 @@ for col in ['tenure', 'MonthlyCharges', 'TotalCharges']:
 # Check for missing values
 st.write("🔹 Checking Input Data Before Prediction")
 st.write(input_data.isnull().sum())
-input_data.fillna(method='ffill', inplace=True)
+#input_data.fillna(method='ffill', inplace=True)
 
 # Load Model
 model = joblib.load("telco_churn_model.pkl")
