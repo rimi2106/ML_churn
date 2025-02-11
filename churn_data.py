@@ -64,6 +64,10 @@ joblib.dump(model, "telco_churn_model.pkl")
 # Streamlit Dashboard
 st.title("Telco Customer Churn Prediction Dashboard")
 
+# Debugging: Display expected categorical features
+st.write("🔹 Debug: Expected Categorical Features")
+st.write(categorical_features.tolist())
+
 # User Inputs
 tenure = st.number_input("Tenure (Months)", min_value=0, max_value=72, value=12)
 monthly_charges = st.number_input("Monthly Charges ($)", min_value=0.0, max_value=150.0, value=50.0)
@@ -87,31 +91,36 @@ dependents = st.selectbox("Dependents", ["Yes", "No"])
 input_data = pd.DataFrame([[tenure, monthly_charges, total_charges, contract, internet_service, paperless_billing, 
                             payment_method, phone_service, multiple_lines, online_security, online_backup, 
                             device_protection, tech_support, streaming_tv, streaming_movies, partner, dependents]],
-                          columns=['tenure', 'MonthlyCharges', 'TotalCharges', 'Contract', 'InternetService', 'PaperlessBilling', 
-                                   'PaymentMethod', 'PhoneService', 'MultipleLines', 'OnlineSecurity', 'OnlineBackup', 
-                                   'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies', 'Partner', 'Dependents'])
+                          columns=X_train.columns)
 
-# Convert categorical features to string type
+# Debugging: Print column names in input_data
+st.write("🔹 Debug: Columns in input_data before transformation")
+st.write(input_data.columns.tolist())
+
+# Convert categorical features to string type only if they exist
 for col in categorical_features:
-    input_data[col] = input_data[col].astype(str)
+    if col in input_data.columns:
+        input_data[col] = input_data[col].astype(str)
+    else:
+        st.write(f"⚠️ Warning: Column '{col}' not found in input_data. It will be added with a default value.")
+        input_data[col] = "Unknown"
 
 # Convert numerical features to float and handle missing values
-for col in ['tenure', 'MonthlyCharges', 'TotalCharges']:
+for col in numerical_features:
     input_data[col] = pd.to_numeric(input_data[col], errors='coerce').fillna(0)
 
 # Ensure all required columns exist in input data
 missing_cols = set(X_train.columns) - set(input_data.columns)
-for col in missing_cols:
-    if col in categorical_features:
-        input_data[col] = "Unknown"
-    else:
+if missing_cols:
+    st.write("⚠️ Missing Columns in input_data:", missing_cols)
+    for col in missing_cols:
         input_data[col] = 0
 
 # Reorder columns to match training data
 input_data = input_data[X_train.columns]
 
 # Debugging: Display final input data before prediction
-st.write("🔹 Final Processed Input Data for Model")
+st.write("🔹 Debug: Final Processed Input Data for Model")
 st.write(input_data)
 
 # Predict
