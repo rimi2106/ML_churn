@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, roc_auc_score
 
 # Load Dataset
-df = pd.read_csv("/mnt/data/Telco-Customer-Churn.csv")
+df = pd.read_csv("Telco-Customer-Churn.csv")
 
 # Drop irrelevant columns
 df = df.drop(columns=['customerID'])
