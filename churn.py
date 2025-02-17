@@ -50,7 +50,7 @@ model.fit(X_train, y_train)
 joblib.dump(model, "telco_churn_model_minimal.pkl")
 
 # Streamlit Dashboard
-st.title("Telco Customer Churn Prediction - Minimal Features")
+st.title("Telco Customer Churn Prediction")
 
 # User Inputs
 tenure = st.number_input("Tenure (Months)", min_value=0, max_value=72, value=12)
